@@ -38,12 +38,12 @@ export function FirstDraftMethod(debts: Debt[], initialMargin: number): void {
 			thisMonthsMargin -= paidOff;
 			totalPaid += paidOff;
 			totalPaid += debts
-				.map(d => d.minPayment)
+				.map(d => d.minPayment ?? 0)
 				.reduce((accum, val) => accum + val, 0);
 
 			if (Math.abs(debt.amount) < 0.01) {
-				console.log(`  Paid off ${debt.name} with ${$money(paidOff)}! Added ${$money(debt.minPayment)} of margin to the snowball.`);
-				margin += debt.minPayment;
+				console.log(`  Paid off ${debt.name} with ${$money(paidOff)}! Added ${$money(debt.minPayment ?? 0)} of margin to the snowball.`);
+				margin += debt.minPayment ?? 0;
 				debts.shift();
 			}
 			else {

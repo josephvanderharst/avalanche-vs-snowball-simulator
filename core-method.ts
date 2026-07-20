@@ -43,7 +43,7 @@ export function CorePayoffMethod(sortedDebts: Debt[], initialMargin: number, max
 				debts: [...debts],
 				margin: margin,
 			},
-			after: null,
+			after: null!,
 		};
 	}
 }
