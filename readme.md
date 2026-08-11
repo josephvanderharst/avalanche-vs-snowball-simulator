@@ -1,5 +1,18 @@
 # React + TypeScript + Vite
 
+## Limitations
+* A debt's min payment is computed *before* the simulation is run. Therefore, for debts with an *interest rate* but **not** a *minimum payment*, their min payments *should* change with their balances
+* There is currently no logic for "refrain from paying a particular debt" during a month. Every debt either has a minimum payment specified, or its interest is considered the minimum payment
+* If one debt's balance is lower than another, then later exceeds the other, the sorting is not changed during the simulation
+
+## To-do
+* Update favicon
+* Work through current limitations
+* Make a home screen that lets you go to "the simulator" as well as each example debt load
+* Add explanations for each example debt load
+* Allow user to compare avalanche and snowball without having to re-simulate
+* DEPLOY THE THING TO GITHUB nerd
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
