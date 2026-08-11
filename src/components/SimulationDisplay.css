@@ -1,0 +1,7 @@
+.simulation-table {
+  th, td {
+    padding: 0.25rem;
+    border: 1px solid #0003;
+    border-collapse: collapse;
+  }
+}
