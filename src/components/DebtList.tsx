@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { type Debt } from "../types/debt.d";
+import { computeInterestRate, computeMinPayment, type Debt } from "../types/debt";
+import { extractInputNumber } from "../shared/input-number-funcs";
+import './DebtList.css';
 
 type DebtListProps = {
   debts: Debt[];
@@ -7,8 +8,6 @@ type DebtListProps = {
 };
 
 export default function DebtList({ debts, setDebts }: DebtListProps) {
-  // const [debts, setDebts] = useState(initDebts ?? []);
-
   const removeDebt = (index: number) => {
     const newDebts = [...debts];
     newDebts.splice(index, 1);
@@ -45,27 +44,27 @@ export default function DebtList({ debts, setDebts }: DebtListProps) {
           {debts.map((d, index) => (
             <tr key={index}>
               <td>
-                <input type="text" value={d.name} onChange={e => updateDebt(index, { name: e.target.value })} />
+                <input type="text" value={d.name!} onChange={e => updateDebt(index, { name: e.target.value })} />
               </td>
               <td>
                 $&nbsp;<input type="number"
-                  value={d.amount}
-                  onChange={e => updateDebt(index, { amount: e.target.value === '' ? null! : Number(e.target.value) })}
+                  value={d.amount!}
+                  onChange={e => updateDebt(index, { amount: extractInputNumber(e) })}
                 />
               </td>
               <td>
                 $&nbsp;<input type="number"
-                  value={d.minPayment}
-                  onChange={e => updateDebt(index, { minPayment: e.target.value === '' ? null! : Number(e.target.value) })}
-                  placeholder={d.amount && d.interestRate ? (d.amount * d.interestRate / 100 / 12).toFixed(2) : undefined}
+                  value={d.minPayment!}
+                  onChange={e => updateDebt(index, { minPayment: extractInputNumber(e) })}
+                  placeholder={computeMinPayment(d).toFixed(2) ?? undefined}
                 />
               </td>
               <td>/</td>
               <td>
-                <input type="number"
-                  value={d.interestRate}
-                  onChange={e => updateDebt(index, { interestRate: e.target.value === '' ? null! : Number(e.target.value) })}
-                  placeholder={d.amount && d.minPayment ? (d.minPayment / d.amount * 1200).toFixed(2) : undefined}
+                <input type="number" className="text-end"
+                  value={d.interestRate!}
+                  onChange={e => updateDebt(index, { interestRate: extractInputNumber(e) })}
+                  placeholder={computeInterestRate(d).toFixed(0) ?? undefined}
                 />&nbsp;%
               </td>
               <td>
