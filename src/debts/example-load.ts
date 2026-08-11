@@ -1,6 +1,6 @@
 import type { Debt } from "../types/debt"
 
-export const DEBTS: Debt[] = [
+export const EXAMPLE_LOAD_DEBTS: Debt[] = [
   {
     name: 'Student Loan',
     amount: 60000,

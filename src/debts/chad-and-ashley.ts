@@ -1,6 +1,6 @@
 import type { Debt } from "../types/debt"
 
-export const DEBTS: Debt[] = [
+export const CHAD_ASHLEY_DEBTS: Debt[] = [
   {
     name: 'Motorcycle',
     amount: 7791.04,
