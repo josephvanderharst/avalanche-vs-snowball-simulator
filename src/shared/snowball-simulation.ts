@@ -100,12 +100,33 @@ export function performSimulation(debts: Debt[], initialMargin: number, type: Si
 
       if (Math.abs(debt.amount!) < 0.01) {
         month.notes.push(`Paid off ${debt.name} with ${$money(paidOff)}!`);
-        month.notes.push(`Added ${$money(debt.minPayment ?? 0)} of margin to the snowball.`);
+        month.notes.push(`Added ${$money(debt.minPayment ?? 0)} of margin to the ${type}.`);
         margin += debt.minPayment ?? 0;
         currDebtIndex++;
       }
       else {
         month.notes.push(`Paid down ${debt.name}: ${$money(debt.amount!)} remains.`);
+      }
+
+      for(let n = currDebtIndex; n < debts.length; n++) {
+        const debt2 = debts[n];
+
+        if (debt2.amount == null || debt2.amount < 0.01) continue;
+        if (debt2.minPayment == null || debt2.interestRate == null) continue;
+
+        const minPaymentViaInterest = debt2.amount! * debt2.interestRate / 1200;
+        const diff = (minPaymentViaInterest - debt2.minPayment);
+        if (Math.abs(diff) >= 0.01) {
+          debt2.amount! += diff;
+
+          if (debt2.amount! < 0) {
+            debt2.amount = 0;
+            margin += debt2.minPayment;
+
+            month.notes.push(`Debt ${debt2.name} paid itself off with minimum payments! Adding ${$money(debt2.minPayment)} to the ${type}`);
+          }
+          debt2.amount! = Math.max(debt2.amount!, 0);
+        }
       }
     }
 
