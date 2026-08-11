@@ -1,4 +1,4 @@
-import type { Debt } from "../types/debt";
+import { computeInterestRate, computeMinPayment, type Debt } from "../types/debt";
 import { $money } from "./money-format";
 
 type SimulationMonth = {
@@ -17,23 +17,30 @@ type SimulationSummary = {
   endingSnowball: number;
 };
 
+export type SimulationType = 'snowball' | 'avalanche';
+
 export type SimulationDetails = {
   allPaidOff: boolean;
+  type: SimulationType;
   debtNames: string[];
   months: SimulationMonth[];
   summary: SimulationSummary;
 };
 
-function fillOutDebts(debts: Debt[]): Debt[] {
-  return debts
+function sortDebtsForSnowball(debts: Debt[]): Debt[] {
+  return makeFilledOutDebtCopies(debts)
+    .sort((d1,d2) => d1.amount! - d2.amount!); // Sort by ascending balance
+}
+
+function makeFilledOutDebtCopies(debts: Debt[]): Debt[] {
+  const newDebts = debts
     .map(d => ({...d}))
-    .sort((d1,d2) => d1.amount! - d2.amount!) // Sort by ascending balance
     .map(debt => {
       if (debt.interestRate == null && debt.minPayment != null) {
-        debt.interestRate = debt.minPayment / 1200 / debt.amount!;
+        debt.interestRate = computeInterestRate(debt);
       }
       else if (debt.minPayment == null && debt.interestRate != null) {
-        debt.minPayment = debt.amount! * debt.interestRate / 1200;
+        debt.minPayment = computeMinPayment(debt);
         // Should be recalculated every month...
       }
       else if (debt.interestRate == null && debt.minPayment == null) {
@@ -42,10 +49,19 @@ function fillOutDebts(debts: Debt[]): Debt[] {
 
       return debt;
     });
+
+  return newDebts;
 }
 
-export function performSnowball(debts: Debt[], initialMargin: number): SimulationDetails {
-  debts = fillOutDebts(debts);
+function sortDebtsForAvalanche(debts: Debt[]): Debt[] {
+  return makeFilledOutDebtCopies(debts)
+    .sort((d1,d2) => d2.interestRate! - d1.interestRate!); // Sort by descending interest rate
+}
+
+export function performSimulation(debts: Debt[], initialMargin: number, type: SimulationType): SimulationDetails {
+  debts = type === 'snowball'
+    ? sortDebtsForSnowball(debts)
+    : sortDebtsForAvalanche(debts);
 
   const simulationMonths: SimulationMonth[] = [];
 
@@ -53,9 +69,6 @@ export function performSnowball(debts: Debt[], initialMargin: number): Simulatio
   let totalPaid = 0;
   let numMonths = 1;
   let currDebtIndex = 0;
-  const initialTotalOwed = debts
-    .map(d => d.amount)
-    .reduce((accum, val) => accum! + val!, 0);
 
   for(; numMonths <= 200 && currDebtIndex < debts.length; numMonths++) {
     const month: SimulationMonth = {
@@ -67,8 +80,6 @@ export function performSnowball(debts: Debt[], initialMargin: number): Simulatio
       afterSnowball: null!,
       notes: [],
     };
-
-    console.log(`Month ${numMonths}: ${$money(margin)} of margin to use.`);
 
     let thisMonthsMargin = margin;
     while (thisMonthsMargin > 0 && currDebtIndex < debts.length) {
@@ -91,7 +102,6 @@ export function performSnowball(debts: Debt[], initialMargin: number): Simulatio
         month.notes.push(`Paid off ${debt.name} with ${$money(paidOff)}!`);
         month.notes.push(`Added ${$money(debt.minPayment ?? 0)} of margin to the snowball.`);
         margin += debt.minPayment ?? 0;
-        // debts.shift();
         currDebtIndex++;
       }
       else {
@@ -107,17 +117,10 @@ export function performSnowball(debts: Debt[], initialMargin: number): Simulatio
   }
 
   const allPaidOff = currDebtIndex >= debts.length;
-  if (!allPaidOff) {
-    console.log(`Could not pay off all debts in ${numMonths} months, starting with ${$money(initialMargin)} of initial margin.`);
-  }
-  else {
-    console.log(`Paid off ${$money(initialTotalOwed!)} in ${numMonths} months!`);
-    console.log(`Paid a total of ${$money(totalPaid)}.`);
-    console.log(`Ended with a snowball of ${$money(margin)}`);
-  }
 
   return {
     allPaidOff: allPaidOff,
+    type: type,
     debtNames: debts.map(d => d.name!),
     months: simulationMonths,
     summary: {

@@ -3,7 +3,7 @@ import DebtList from "../components/DebtList";
 import { computeMinPayment, isDebtFilledOut, type Debt } from "../types/debt";
 import { extractInputNumber } from "../shared/input-number-funcs";
 import { $money } from "../shared/money-format";
-import { performSnowball, type SimulationDetails } from "../shared/snowball-simulation";
+import { performSimulation, type SimulationType, type SimulationDetails } from "../shared/snowball-simulation";
 import SimulationDisplay from "../components/SimulationDisplay";
 
 export type SimulatorProps = {
@@ -27,6 +27,8 @@ export default function Simulator({ initDebts }: SimulatorProps) {
     return areNumbersFilledOut && areNamesFilledOut && areNamesUnique && isInitMarginPresent;
   };
 
+  const [simType, setSimType] = useState<SimulationType>('snowball');
+
   const [simulation, setSimulation] = useState<SimulationDetails>(null!);
 
   return (
@@ -49,10 +51,30 @@ export default function Simulator({ initDebts }: SimulatorProps) {
           </div>
         </div>
 
+        <div className="d-flex align-self-center gap-3">
+          <label>
+            <input type="radio"
+              value="snowball"
+              checked={ simType === 'snowball' }
+              onChange={ () => setSimType('snowball') }
+            />
+            <span className="mx-1">Snowball</span>
+          </label>
+          <label>
+            <input type="radio"
+              className="pr-2"
+              value="avalanche"
+              checked={ simType === 'avalanche' }
+              onChange={ () => setSimType('avalanche') }
+            />
+            <span className="mx-1">Avalanche</span>
+          </label>
+        </div>
+
         <div>
           <button className="btn btn-primary"
             disabled={!areDebtsReadyToSimulate()}
-            onClick={() => setSimulation(performSnowball(debts, initMargin))}
+            onClick={() => setSimulation(performSimulation(debts, initMargin, simType))}
           >Simulate!</button>
         </div>
 
